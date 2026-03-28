@@ -1,0 +1,12 @@
+.next
+node_modules
+out
+coverage
+*.log
+.DS_Store
+public/uploads
+data
+.omx/
+before-wasd-test*.png
+after-wasd-test*.png
+스크린샷*.png
