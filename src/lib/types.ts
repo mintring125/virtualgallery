@@ -12,6 +12,8 @@ export type Artwork = {
   sourceFilename: string;
   position: [number, number, number];
   rotationY?: number;
+  frameScale?: number;
+  frameVariant?: "portrait" | "landscapeWide" | "wallMural";
   createdAt: string;
 };
 

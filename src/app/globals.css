@@ -330,6 +330,23 @@ textarea {
   transform: translate3d(var(--x, 0px), var(--y, 0px), 0);
 }
 
+.dialpad-controls {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.camera-turn-stack {
+  display: grid;
+  gap: 10px;
+}
+
+.camera-turn-button {
+  min-width: 132px;
+  min-height: 48px;
+  padding: 0 12px;
+}
+
 .stat-list,
 .comment-list,
 .table {
@@ -422,6 +439,12 @@ textarea {
   white-space: nowrap;
 }
 
+.presence-toggle {
+  justify-content: space-between;
+  min-height: 46px;
+  width: 100%;
+}
+
 .helper-box,
 .success-box,
 .error-box,
@@ -512,6 +535,62 @@ textarea {
   object-fit: cover;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.artwork-preview-shell {
+  position: relative;
+}
+
+.artwork-zoom-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.artwork-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(11, 16, 22, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.artwork-zoom-dialog {
+  position: relative;
+  width: min(1200px, 100%);
+  max-height: calc(100vh - 40px);
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(236, 235, 229, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.artwork-zoom-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  min-height: 42px;
+}
+
+.artwork-zoom-image {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 96px);
+  object-fit: contain;
+  border-radius: 18px;
 }
 
 .text-artwork-box {

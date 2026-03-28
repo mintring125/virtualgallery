@@ -37,7 +37,9 @@ function createInitialStore(): GalleryStore {
 
 function syncSeedArtworks(gallery: GalleryRecord): GalleryRecord {
   const seedMap = new Map(seedArtworks.map((artwork) => [artwork.id, artwork]));
-  const syncedExisting = gallery.artworks.map((artwork) => seedMap.get(artwork.id) ?? artwork);
+  const syncedExisting = gallery.artworks
+    .filter((artwork) => !/^art-(?:[1-9]|1[0-9]|2[0-9]|3[0-9])$/.test(artwork.id) || seedMap.has(artwork.id))
+    .map((artwork) => seedMap.get(artwork.id) ?? artwork);
   const existingIds = new Set(syncedExisting.map((artwork) => artwork.id));
   const missing = seedArtworks.filter((artwork) => !existingIds.has(artwork.id));
 
