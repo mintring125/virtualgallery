@@ -4,12 +4,13 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import path from "path";
 import { getCategoryCapacity, getPlacementForArtwork, getWallOrder } from "@/lib/artwork-layout";
 import { DEFAULT_GALLERY_ID, seedArtworks, seedComments } from "@/lib/seed-data";
-import type { Artwork, ArtworkComment, UploadCategory, WallSlot } from "@/lib/types";
+import type { Artwork, ArtworkComment, UploadCategory, WallConfig, WallSlot } from "@/lib/types";
 
 type GalleryRecord = {
   id: string;
   title: string;
   description: string;
+  wallConfig: WallConfig;
   artworks: Artwork[];
   comments: ArtworkComment[];
 };
@@ -28,6 +29,11 @@ function createInitialStore(): GalleryStore {
         id: DEFAULT_GALLERY_ID,
         title: "3학년 2반 온라인 전시실",
         description: "교실 작품을 아바타로 둘러보는 3D 갤러리",
+        wallConfig: {
+          front: "individual",
+          left: "group",
+          right: "collaborative"
+        },
         artworks: seedArtworks,
         comments: seedComments
       }
@@ -45,6 +51,12 @@ function syncSeedArtworks(gallery: GalleryRecord): GalleryRecord {
 
   return {
     ...gallery,
+    wallConfig:
+      gallery.wallConfig ?? {
+        front: "individual",
+        left: "group",
+        right: "collaborative"
+      },
     artworks: [...syncedExisting, ...missing]
   };
 }
@@ -71,22 +83,14 @@ async function writeStore(store: GalleryStore) {
   await writeFile(STORE_PATH, JSON.stringify(store, null, 2), "utf8");
 }
 
-function resolveWallSlot(artworks: Artwork[], category: UploadCategory): WallSlot {
-  const existingSameCategory = artworks.find((artwork) => artwork.displayCategory === category && artwork.wallSlot);
-
-  if (existingSameCategory?.wallSlot) {
-    return existingSameCategory.wallSlot;
-  }
-
-  const usedWalls = new Set(artworks.map((artwork) => artwork.wallSlot).filter(Boolean) as WallSlot[]);
-
+function resolveWallSlot(wallConfig: WallConfig, category: UploadCategory): WallSlot | null {
   for (const wallSlot of getWallOrder()) {
-    if (!usedWalls.has(wallSlot)) {
+    if (wallConfig[wallSlot] === category) {
       return wallSlot;
     }
   }
 
-  return "right";
+  return null;
 }
 
 export async function readGalleryRecord(galleryId: string = DEFAULT_GALLERY_ID): Promise<GalleryRecord> {
@@ -133,7 +137,12 @@ export async function addBatchArtworks(
 ): Promise<Artwork[]> {
   const store = await readStore();
   const gallery = store.galleries[galleryId] ?? (await readGalleryRecord(galleryId));
-  const wallSlot = resolveWallSlot(gallery.artworks, category);
+  const wallSlot = resolveWallSlot(gallery.wallConfig, category);
+
+  if (!wallSlot) {
+    throw new Error("먼저 관리자 화면에서 이 유형을 배치할 벽을 지정해야 합니다.");
+  }
+
   const existingSameCategory = gallery.artworks.filter((artwork) => artwork.displayCategory === category);
   const totalCount = existingSameCategory.length + drafts.length;
   const capacity = getCategoryCapacity(category);
@@ -173,6 +182,16 @@ export async function addBatchArtworks(
   await writeStore(store);
 
   return createdDrafts;
+}
+
+export async function updateWallConfig(galleryId: string, wallConfig: WallConfig): Promise<GalleryRecord> {
+  const store = await readStore();
+  const gallery = store.galleries[galleryId] ?? (await readGalleryRecord(galleryId));
+  gallery.wallConfig = wallConfig;
+  store.galleries[galleryId] = gallery;
+  await writeStore(store);
+
+  return gallery;
 }
 
 export async function addCommentToArtwork(input: {

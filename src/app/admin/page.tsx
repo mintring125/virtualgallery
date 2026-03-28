@@ -7,5 +7,5 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const gallery = await readGalleryRecord(DEFAULT_GALLERY_ID);
 
-  return <AdminWorkspace existingArtworks={gallery.artworks} galleryId={gallery.id} />;
+  return <AdminWorkspace galleryId={gallery.id} wallConfig={gallery.wallConfig} />;
 }

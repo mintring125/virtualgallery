@@ -4,6 +4,8 @@ export type UploadCategory = "individual" | "group" | "collaborative";
 
 export type WallSlot = "front" | "left" | "right";
 
+export type WallConfig = Record<WallSlot, UploadCategory | null>;
+
 export type FrameVariant = "portrait" | "landscapeWide" | "wallMural";
 
 export type Artwork = {

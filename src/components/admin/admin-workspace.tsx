@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { parseArtworkFilename } from "@/lib/filename-parser";
-import type { Artwork, BulkUploadRow, UploadCategory } from "@/lib/types";
+import type { BulkUploadRow, UploadCategory, WallConfig, WallSlot } from "@/lib/types";
 
 type AdminWorkspaceProps = {
   galleryId: string;
-  existingArtworks: Artwork[];
+  wallConfig: WallConfig;
 };
 
 const categoryLabels: Record<UploadCategory, string> = {
@@ -16,10 +17,10 @@ const categoryLabels: Record<UploadCategory, string> = {
   collaborative: "협동화 1개"
 };
 
-const categoryDescriptions: Record<UploadCategory, string> = {
-  individual: "첫 업로드라면 정면 벽 11칸 기준으로 자동 배치됩니다.",
-  group: "다음 빈 벽면에 큰 캔버스 4개가 자동 정렬됩니다.",
-  collaborative: "남은 벽면에 큰 협동화 1개가 벽화 스타일로 배치됩니다."
+const wallLabels: Record<WallSlot, string> = {
+  front: "정면 벽: 11개",
+  left: "왼쪽 벽: 4개",
+  right: "오른쪽 벽: 1개"
 };
 
 function cleanupPreviewUrls(rows: BulkUploadRow[]) {
@@ -30,28 +31,26 @@ function cleanupPreviewUrls(rows: BulkUploadRow[]) {
   });
 }
 
-export function AdminWorkspace({ galleryId, existingArtworks }: AdminWorkspaceProps) {
+export function AdminWorkspace({ galleryId, wallConfig }: AdminWorkspaceProps) {
   const router = useRouter();
   const [category, setCategory] = useState<UploadCategory>("individual");
   const [files, setFiles] = useState<File[]>([]);
   const [rows, setRows] = useState<BulkUploadRow[]>([]);
+  const [draftWallConfig, setDraftWallConfig] = useState<WallConfig>(wallConfig);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isConfigPending, startConfigTransition] = useTransition();
+
+  useEffect(() => {
+    setDraftWallConfig(wallConfig);
+  }, [wallConfig]);
 
   useEffect(() => {
     return () => cleanupPreviewUrls(rows);
   }, [rows]);
 
   const reviewCount = useMemo(() => rows.filter((row) => row.status === "needs-review").length, [rows]);
-
-  const groupedCounts = useMemo(() => {
-    return {
-      front: existingArtworks.filter((artwork) => artwork.wallSlot === "front").length,
-      left: existingArtworks.filter((artwork) => artwork.wallSlot === "left").length,
-      right: existingArtworks.filter((artwork) => artwork.wallSlot === "right").length
-    };
-  }, [existingArtworks]);
 
   function updateFromFiles(nextFiles: File[]) {
     cleanupPreviewUrls(rows);
@@ -98,6 +97,34 @@ export function AdminWorkspace({ galleryId, existingArtworks }: AdminWorkspacePr
     setRows([]);
     setMessage("");
     setError("");
+  }
+
+  function saveWallConfig() {
+    startConfigTransition(async () => {
+      setMessage("");
+      setError("");
+
+      const response = await fetch("/api/admin/wall-config", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          galleryId,
+          wallConfig: draftWallConfig
+        })
+      });
+
+      const payload = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        setError(payload.error || "벽 배치 설정 저장에 실패했습니다.");
+        return;
+      }
+
+      setMessage("벽 배치 설정을 저장했습니다.");
+      router.refresh();
+    });
   }
 
   function onSubmit() {
@@ -158,16 +185,50 @@ export function AdminWorkspace({ galleryId, existingArtworks }: AdminWorkspacePr
   return (
     <main className="page-shell stack">
       <section className="hero-card stack">
-        <span className="eyebrow">Admin Workspace</span>
-        <h1 className="section-title">교사 운영 화면</h1>
+        <div className="toolbar-row">
+          <div className="stack">
+            <span className="eyebrow">Admin Workspace</span>
+            <h1 className="section-title">교사 운영 화면</h1>
+          </div>
+          <Link className="ghost-link" href="/gallery/class-3-2?role=teacher&name=담임">
+            갤러리로 돌아가기
+          </Link>
+        </div>
         <p className="muted">
-          유형을 고르고 파일을 한 번에 올리면 정면, 왼쪽, 오른쪽 벽 순서로 자동 배치됩니다. 이미지 파일은 즉시 이미지 작품으로,
+          벽별로 어떤 유형을 설치할지 먼저 정하고 저장한 뒤, 해당 유형으로 일괄 업로드하면 자동 배치됩니다. 이미지 파일은 이미지 작품,
           PDF 파일은 글 작품으로 인식합니다.
         </p>
-        <div className="meta-grid">
-          <div className="info-chip">{`정면 벽: ${groupedCounts.front}개`}</div>
-          <div className="info-chip">{`왼쪽 벽: ${groupedCounts.left}개`}</div>
-          <div className="info-chip">{`오른쪽 벽: ${groupedCounts.right}개`}</div>
+      </section>
+
+      <section className="panel-card stack">
+        <div className="toolbar-row">
+          <h2 className="section-title">벽별 설치 유형</h2>
+          <button className="cta-link button-reset" disabled={isConfigPending} onClick={saveWallConfig} type="button">
+            {isConfigPending ? "저장 중..." : "벽 설정 저장"}
+          </button>
+        </div>
+
+        <div className="card-grid">
+          {(["front", "left", "right"] as WallSlot[]).map((wallSlot) => (
+            <article className="panel-card stack wall-config-card" key={wallSlot}>
+              <strong>{wallLabels[wallSlot]}</strong>
+              <select
+                className="inline-input"
+                onChange={(event) =>
+                  setDraftWallConfig((current) => ({
+                    ...current,
+                    [wallSlot]: event.target.value === "unassigned" ? null : (event.target.value as UploadCategory)
+                  }))
+                }
+                value={draftWallConfig[wallSlot] ?? "unassigned"}
+              >
+                <option value="unassigned">미설치</option>
+                <option value="individual">{categoryLabels.individual}</option>
+                <option value="group">{categoryLabels.group}</option>
+                <option value="collaborative">{categoryLabels.collaborative}</option>
+              </select>
+            </article>
+          ))}
         </div>
       </section>
 
@@ -175,7 +236,7 @@ export function AdminWorkspace({ galleryId, existingArtworks }: AdminWorkspacePr
         <div className="toolbar-row">
           <div className="stack">
             <h2 className="section-title">유형 선택 후 일괄 업로드</h2>
-            <p className="muted">{categoryDescriptions[category]}</p>
+            <p className="muted">벽 설정에서 같은 유형으로 지정한 벽으로 자동 배치됩니다.</p>
           </div>
           <label className="stack">
             <span className="muted">작품 유형</span>
