@@ -1,4 +1,4 @@
-import { getArtworkPlacement } from "@/lib/artwork-layout";
+import { getPlacementForArtwork } from "@/lib/artwork-layout";
 import type { Artwork, ArtworkComment, PresenceUser } from "@/lib/types";
 
 export const DEFAULT_GALLERY_ID = "class-3-2";
@@ -12,7 +12,7 @@ const imageUrls = [
   "https://images.unsplash.com/photo-1501594907352-04cda38ebc29?auto=format&fit=crop&w=1200&q=80"
 ];
 
-const backWallWorks = [
+const individualWorks = [
   ["01", "김민수", "봄 풍경화"],
   ["02", "박서윤", "비 오는 날"],
   ["03", "이준호", "우리 동네"],
@@ -26,17 +26,15 @@ const backWallWorks = [
   ["11", "문서아", "초록 언덕"]
 ] as const;
 
-const leftGroupWorks = [
+const groupWorks = [
   ["12", "1모둠", "모둠 작품 1"],
   ["13", "2모둠", "모둠 작품 2"],
   ["14", "3모둠", "모둠 작품 3"],
   ["15", "4모둠", "모둠 작품 4"]
 ] as const;
 
-const rightCollaborativeWork = ["16", "우리 반", "학급 협동화"] as const;
-
 export const seedArtworks: Artwork[] = [
-  ...backWallWorks.map(([studentNumber, authorName, title], index): Artwork => {
+  ...individualWorks.map(([studentNumber, authorName, title], index): Artwork => {
     const isImage = index % 2 === 0;
 
     return {
@@ -47,41 +45,51 @@ export const seedArtworks: Artwork[] = [
       studentNumber,
       description: `${authorName} 학생의 개인 작품`,
       imageUrl: isImage ? imageUrls[index % imageUrls.length] : undefined,
-      contentText: isImage ? undefined : `${title}에 대한 짧은 설명과 느낌을 정리한 전시용 글입니다.`,
-      sourceFilename: `${studentNumber}_${authorName}_${title}.${isImage ? "jpg" : "txt"}`,
+      pdfUrl: !isImage ? "/samples/student-text.pdf" : undefined,
+      contentText: !isImage ? `${title}에 대한 글 작품입니다.` : undefined,
+      sourceFilename: `${studentNumber}_${authorName}_${title}.${isImage ? "jpg" : "pdf"}`,
       createdAt: `2026-03-28T09:${String(index).padStart(2, "0")}:00+09:00`,
-      ...getArtworkPlacement(index)
+      ...getPlacementForArtwork({
+        category: "individual",
+        wallSlot: "front",
+        index,
+        totalCount: individualWorks.length
+      })
     };
   }),
-  ...leftGroupWorks.map(([studentNumber, authorName, title], offset): Artwork => {
-    const index = backWallWorks.length + offset;
-
-    return {
-      id: `art-${index + 1}`,
-      type: "image",
-      title,
-      authorName,
-      studentNumber,
-      description: `${authorName} 공동 캔버스 작품`,
-      imageUrl: imageUrls[(index + 1) % imageUrls.length],
-      sourceFilename: `${studentNumber}_${authorName}_${title}.png`,
-      createdAt: `2026-03-28T10:${String(offset).padStart(2, "0")}:00+09:00`,
-      frameScale: 1.6,
-      ...getArtworkPlacement(index)
-    };
-  }),
+  ...groupWorks.map(([studentNumber, authorName, title], index): Artwork => ({
+    id: `art-${individualWorks.length + index + 1}`,
+    type: "image",
+    title,
+    authorName,
+    studentNumber,
+    description: `${authorName} 공동 캔버스 작품`,
+    imageUrl: imageUrls[(index + 1) % imageUrls.length],
+    sourceFilename: `${studentNumber}_${authorName}_${title}.png`,
+    createdAt: `2026-03-28T10:${String(index).padStart(2, "0")}:00+09:00`,
+    ...getPlacementForArtwork({
+      category: "group",
+      wallSlot: "left",
+      index,
+      totalCount: groupWorks.length
+    })
+  })),
   {
     id: "art-16",
     type: "image",
-    title: rightCollaborativeWork[2],
-    authorName: rightCollaborativeWork[1],
-    studentNumber: rightCollaborativeWork[0],
+    title: "학급 협동화",
+    authorName: "우리 반",
+    studentNumber: "16",
     description: "오른쪽 벽을 대표하는 큰 학급 협동화",
     imageUrl: imageUrls[4],
-    sourceFilename: `${rightCollaborativeWork[0]}_${rightCollaborativeWork[1]}_${rightCollaborativeWork[2]}.jpg`,
+    sourceFilename: "16_우리반_학급협동화.jpg",
     createdAt: "2026-03-28T10:10:00+09:00",
-    frameVariant: "wallMural",
-    ...getArtworkPlacement(backWallWorks.length + leftGroupWorks.length)
+    ...getPlacementForArtwork({
+      category: "collaborative",
+      wallSlot: "right",
+      index: 0,
+      totalCount: 1
+    })
   }
 ];
 

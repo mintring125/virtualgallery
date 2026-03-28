@@ -722,7 +722,10 @@ export function GalleryExperience({
                       <img alt={selectedArtwork.title} className="artwork-preview" src={selectedArtwork.imageUrl} />
                     </div>
                   ) : null}
-                  {selectedArtwork.type === "text" && selectedArtwork.contentText ? (
+                  {selectedArtwork.type === "text" && selectedArtwork.pdfUrl ? (
+                    <iframe className="pdf-preview-frame" src={selectedArtwork.pdfUrl} title={selectedArtwork.title} />
+                  ) : null}
+                  {selectedArtwork.type === "text" && !selectedArtwork.pdfUrl && selectedArtwork.contentText ? (
                     <div className="text-artwork-box">{selectedArtwork.contentText}</div>
                   ) : null}
                   <div className="comment-list">

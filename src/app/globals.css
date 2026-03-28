@@ -369,6 +369,12 @@ textarea {
   align-items: center;
 }
 
+.presence-toggle {
+  width: 100%;
+  justify-content: space-between;
+  min-height: 46px;
+}
+
 .dot {
   width: 12px;
   height: 12px;
@@ -386,6 +392,10 @@ textarea {
 
 .table-row-editable {
   grid-template-columns: minmax(0, 1.4fr) 88px 120px minmax(0, 1fr) 150px;
+}
+
+.table-row-upload {
+  grid-template-columns: 92px minmax(0, 1.3fr) 88px 120px minmax(0, 1fr) 92px 150px;
 }
 
 .table-header {
@@ -535,6 +545,96 @@ textarea {
   object-fit: cover;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.artwork-preview-shell {
+  position: relative;
+}
+
+.artwork-zoom-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  width: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.artwork-zoom-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(11, 16, 22, 0.72);
+  backdrop-filter: blur(8px);
+}
+
+.artwork-zoom-dialog {
+  position: relative;
+  width: min(1200px, 100%);
+  max-height: calc(100vh - 40px);
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(236, 235, 229, 0.92);
+  box-shadow: var(--shadow);
+}
+
+.artwork-zoom-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  min-height: 42px;
+}
+
+.artwork-zoom-image {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 96px);
+  object-fit: contain;
+  border-radius: 18px;
+}
+
+.pdf-preview-frame {
+  width: 100%;
+  min-height: 280px;
+  border: 0;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.upload-preview-cell {
+  display: grid;
+  place-items: center;
+}
+
+.upload-preview-thumb,
+.upload-preview-pdf {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+}
+
+.upload-preview-thumb {
+  object-fit: cover;
+  border: 1px solid rgba(120, 118, 112, 0.22);
+}
+
+.upload-preview-pdf {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(120, 118, 112, 0.22);
+  background: rgba(255, 255, 255, 0.4);
+  color: #4d4034;
+  font-weight: 700;
 }
 
 .artwork-preview-shell {

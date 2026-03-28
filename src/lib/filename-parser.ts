@@ -10,8 +10,8 @@ export function inferFileType(filename: string): BulkUploadRow["fileType"] {
     return "image";
   }
 
-  if (lower.endsWith(".txt") || lower.endsWith(".md")) {
-    return "text";
+  if (lower.endsWith(".pdf")) {
+    return "pdf";
   }
 
   return "unknown";

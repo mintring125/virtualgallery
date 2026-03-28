@@ -1,5 +1,11 @@
 export type ViewerRole = "teacher" | "student" | "guest";
 
+export type UploadCategory = "individual" | "group" | "collaborative";
+
+export type WallSlot = "front" | "left" | "right";
+
+export type FrameVariant = "portrait" | "landscapeWide" | "wallMural";
+
 export type Artwork = {
   id: string;
   type: "image" | "text";
@@ -8,12 +14,15 @@ export type Artwork = {
   studentNumber?: string;
   description: string;
   imageUrl?: string;
+  pdfUrl?: string;
   contentText?: string;
   sourceFilename: string;
+  displayCategory?: UploadCategory;
+  wallSlot?: WallSlot;
   position: [number, number, number];
   rotationY?: number;
   frameScale?: number;
-  frameVariant?: "portrait" | "landscapeWide" | "wallMural";
+  frameVariant?: FrameVariant;
   createdAt: string;
 };
 
@@ -39,7 +48,8 @@ export type BulkUploadRow = {
   title: string;
   authorName: string;
   studentNumber: string;
-  fileType: "image" | "text" | "unknown";
+  fileType: "image" | "pdf" | "unknown";
   status: "ok" | "needs-review";
   reason?: string;
+  previewUrl?: string;
 };
